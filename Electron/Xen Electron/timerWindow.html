@@ -1,0 +1,95 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body{
+      background-color: black;
+      color: white
+    }
+    p {
+      text-align: center;
+      font-size: 60px;
+      margin-top: 0px;
+    }
+    div#Tasks {
+      text-align: center;
+    }
+    .collection-item {
+      padding: 15px;
+    }
+  </style> 
+  <title>Xen</title>
+</head>
+<body>
+  <p id="remainingTime"></p>
+  <div id="Tasks"></div>
+  <script>
+    const electron = require('electron');
+    const {ipcRenderer} = electron;
+    const fs  = require('fs');
+    const path = require('path');
+    const {PythonShell} = require('python-shell')
+
+    const configFilePath = path.join(__dirname,'config.json');
+    const configString = fs.readFileSync(configFilePath);
+    const config = JSON.parse(configString);
+
+    const div = document.querySelector('#Tasks');
+
+    for(const task of config.tasks){
+      const divTasks = document.createElement('div');
+      divTasks.className = 'collection-item';
+      const itemText = document.createTextNode(task);
+
+      divTasks.appendChild(itemText);
+      div.appendChild(divTasks);
+    }
+
+    let currentDate = new Date()
+    let currentMinute = currentDate.getMinutes()
+    let currentSeconds = currentDate.getSeconds()
+    let endTime = parseInt(config.endTime.substring(3));
+    let disableInputTimeInSeconds = ((endTime - currentMinute) * 60)-currentSeconds;
+    ipcRenderer.send("disableTime:add",disableInputTimeInSeconds)
+
+    let timeOut = true
+    let updateCountdown = setInterval(function(){
+      currentDate = new Date()
+      currentMinute = currentDate.getMinutes()
+      currentSeconds = currentDate.getSeconds()
+      
+      remainingTime = ((endTime - currentMinute) * 60) + currentSeconds
+      remainingTime = Math.floor(remainingTime/120)
+
+      currentMinute = checkTime(currentMinute);
+
+      remainingTime = remainingTime.toString()+":"+(checkTime(60-currentSeconds))
+
+      if (timeOut){
+        document.getElementById("remainingTime").innerHTML = remainingTime
+      }else{
+        console.log("Time out")
+        document.getElementById("remainingTime").innerHTML = "Hope you have completed your tasks:)"
+      }
+
+      function checkTime(seconds) {
+        if (seconds < 10) {
+          seconds = "0" + seconds
+        }; 
+
+        if(seconds == "60"){
+          seconds = "00"
+        }
+        return seconds;
+      }
+    },1000)
+
+
+    setTimeout(function(){
+      timeOut = false
+    },(disableInputTimeInSeconds*1000))
+    
+  </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "name": "xen",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron-packager ."
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "electron": "^10.1.4",
+    "grudus-timepicker": "^1.0.2",
+    "iohook": "^0.6.6",
+    "moment": "^2.29.1",
+    "moment-timezone": "^0.5.31",
+    "node-cron": "^2.0.3",
+    "python-shell": "^2.0.2",
+    "shelljs": "^0.8.4"
+  },
+  "devDependencies": {
+    "electron-packager": "^15.1.0"
+  }
+}

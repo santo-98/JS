@@ -1,0 +1,194 @@
+<html>
+  <head>
+  <style>
+    body{
+      background-color: black;
+      color: white;
+      font-family: 'Nunito', sans-serif;
+    }
+    .startTime{
+      justify-content: center;
+      display: flex;
+      margin-top: 100px;
+    }
+    button#startTime {
+    margin: 0 10px;
+    padding: 0 10px;
+    font-family: 'Nunito', sans-serif;
+    }
+    button#endTime {
+      padding: 0 10px;
+      font-family: 'Nunito', sans-serif;
+    }
+    input#item {
+    margin: 0 10px;
+    padding: 2px 5px;
+    width: 210px;
+    }
+    .Timer .main{
+      display: flex;
+      justify-content: center;
+        margin-top: 50px;
+    }
+    #task{
+      margin-top: 2px;
+      font-family: 'Nunito', sans-serif;
+    }
+    h1{
+      display: flex;
+      justify-content: center;
+      margin-top: 100px;
+    }
+    table#tasksTable {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      margin-left: 20px;
+    }
+    div#Tasks {
+      text-align: center;
+    }
+    .collection-item {
+      padding: 15px;
+    }
+    button#del {
+    margin-left: 20px;
+    }
+  </style>
+  <title>
+    Xen
+  </title>
+  <link href="https://rawgit.com/grudus/Timepicker/master/dist/index.css" type="text/css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <script type="text/javascript" src="https://rawgit.com/grudus/Timepicker/master/dist/grudus-timepicker.es5.js"></script>
+    <div>
+      <h1 id="nav">Welcome to Xen Mode!</h1>
+    </div>
+    <div class="Timer">
+      <div class="startTime">
+        <button id="startTime" onclick="startTimePicker()">Start Time</button>
+        <button id="endTime" onclick="endTimePicker()">End Time</button>
+      </div>
+      <div class="container main">
+        <form onsubmit = "return submitForm(event)">
+          <div>
+            <input type="text" id="item" placeholder="Enter Your Task" autofocus>
+            <button type="submit" id="task">Add Task</button>
+          </div>
+        </form>
+      </div>
+      <div id="Tasks"></div>
+    </div> 
+    <script>
+      const electron = require('electron');
+      const {ipcRenderer} = electron;
+      const div = document.querySelector('#Tasks');
+      const fs  = require('fs');
+      const path = require('path');
+
+      const configFilePath = path.join(__dirname,'config.json');
+      const configString = fs.readFileSync(configFilePath);
+      const config = JSON.parse(configString);
+
+      function startTimePicker(){
+        window.Timepicker.showPicker({
+          onSubmit: (time) => {ipcRenderer.send('Time:add', {startTime: time.formatted()});},
+          headerBackground: '#424242',
+          headerColor: '#e0e0e0',
+          headerSelected: '#fafafa',
+          wrapperBackground: "#424242",
+          footerBackground: "#424242",
+          submitColor: "#F44336",
+          cancelColor: "#F44336",
+          clockBackground: "#424242",
+          clockItemColor: "#fafafa",
+          clockItemInnerColor: "#e0e0e0",
+          handColor: "#F44336"
+        });
+      }
+
+      function endTimePicker(){
+          window.Timepicker.showPicker({
+            onSubmit: (time) => {ipcRenderer.send('Time:add', {endTime: time.formatted()});},
+            headerBackground: '#424242',
+            headerColor: '#e0e0e0',
+            headerSelected: '#fafafa',
+            wrapperBackground: "#424242",
+            footerBackground: "#424242",
+            submitColor: "#F44336",
+            cancelColor: "#F44336",
+            clockBackground: "#424242",
+            clockItemColor: "#fafafa",
+            clockItemInnerColor: "#e0e0e0",
+            handColor: "#F44336"
+        });
+      }
+
+      function frequency(){
+        ipcRenderer.send('frequency:add', document.getElementById("Frequency").value);
+      }
+
+      function submitForm(e){
+        e.preventDefault();
+        const item = document.querySelector('#item').value;
+        ipcRenderer.send('task:add', item);
+        document.querySelector('#item').value =""
+      }
+
+      for(const task of config.tasks){
+        const divTasks = document.createElement('div');
+        divTasks.className = 'collection-item';
+        divTasks.id = task;
+        const itemText = document.createTextNode(task);
+        const deleteButton = document.createElement('button');
+        deleteButton.id = 'del'
+        deleteButton.type = 'button';
+        deleteButton.value = task
+        deleteButton.addEventListener('click',function(){
+          console.log(deleteButton.value)
+          ipcRenderer.send("task:clear",deleteButton.value)
+          deleteButton.remove()
+          divTasks.remove()
+        },false)
+        const deleteButtonName = document.createTextNode("Delete");
+
+        divTasks.appendChild(itemText);
+        div.appendChild(divTasks);
+        deleteButton.appendChild(deleteButtonName);
+        divTasks.appendChild(deleteButton);
+      }
+
+      ipcRenderer.on('task:add',function(e, task){
+        console.log(task)
+        const divTask = document.createElement('div');
+        divTask.className = 'collection-item';
+        divTask.id = task;
+        const itemText = document.createTextNode(task);
+        const deleteButton = document.createElement('button');
+        deleteButton.id = 'del'
+        deleteButton.type = 'button';
+        deleteButton.value = task
+        deleteButton.addEventListener('click',function(){
+          console.log(deleteButton.value)
+          ipcRenderer.send("task:clear",deleteButton.value)
+          deleteButton.remove()
+          divTask.remove()
+        },false)
+        const deleteButtonName = document.createTextNode("Delete")
+
+        divTask.appendChild(itemText);
+        deleteButton.appendChild(deleteButtonName);
+        divTask.appendChild(deleteButton);
+        div.appendChild(divTask);
+      })
+
+      function deleteTask(task){
+        console.log(task)
+        // const deleteTask = document.getElementById(task);
+        // deleteTask.remove()
+      }
+    </script>
+  </body>
+</html>
